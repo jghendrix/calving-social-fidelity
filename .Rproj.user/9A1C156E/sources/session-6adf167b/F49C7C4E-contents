@@ -1,0 +1,111 @@
+social_spatial_plotting <- function(for_analyses, indiv_tradeoffs) {
+
+  ## Spatial fidelity vs. neighbour distance change
+
+  ggplot(for_analyses, aes(x = dist_to_last_yr/1000,
+                           y = mean_ln_dist,
+                           colour = Herd)) +
+    geom_point(size = 2, alpha = 0.7) +
+    #geom_smooth(aes(group = "none"), colour = "black", method = "lm") +
+    scale_colour_viridis(discrete = TRUE, option = "C", end = 0.9) +
+    coord_cartesian(xlim = c(0, 50), ylim = c(0,2)) +
+    theme_bw() +
+    xlab("Distance to prior year's calving site (km)") +
+    ylab("Average change in ln(neighbour distance)")
+
+  ggsave("graphics/ln_social-spatial-fidelity_noline.png",
+         width = 1600, height = 1100, units="px")
+
+  ## log() axes Spatial fidelity vs. neighbour distance change
+
+  ggplot(for_analyses, aes(x = dist_to_last_yr/1000,
+                           y = mean_ln_dist,
+                           colour = Herd)) +
+    geom_point(size = 2, alpha = 0.8) +
+    scale_colour_viridis(discrete = TRUE) +
+    scale_x_continuous(trans = "log10", limits = c(0.1, 120)) +
+    #coord_cartesian(xlim = c(0, 50)) +
+    theme_bw() +
+    xlab("Distance to prior year's calving site (km)") +
+    ylab("Average change in ln(neighbour distance)")
+
+  ggsave("graphics/ln_social-by-log10_spatial-fidelity.png",
+         width = 2000, height = 1500, units="px")
+
+  herd_col <- viridis(7, option = "C", end = 0.9)
+
+  # Herd-level averages + errorbars?
+  sums <- for_analyses %>% filter(!is.na(mean_ln_dist)) %>%
+    group_by(Herd) %>%
+    mutate(dist_to_last_yr = dist_to_last_yr/1000) %>%
+    summarise(n = n(), neigh = mean(mean_ln_dist), sd_neigh = sd(mean_ln_dist), prior = mean(dist_to_last_yr), sd_prior = sd(dist_to_last_yr), neigh_se = sd_neigh/sqrt(n), prior_se = sd_prior/sqrt(n))
+
+  ggplot(sums, aes(y = neigh, x = prior,
+                   ymin = neigh - neigh_se, ymax = neigh + neigh_se,
+                   xmin = prior - prior_se, xmax = prior + prior_se,
+         colour = Herd)) +
+    geom_point(size = 2) +
+    geom_errorbar(width = 0) +
+    geom_errorbarh() +
+    scale_colour_viridis(discrete = TRUE) +
+    theme_bw() +
+    xlab("Distance to prior year's calving site (km)") +
+    ylab("Average change in ln(neighbour distance)")
+
+  ggsave("graphics/by-herd_social-spatial-fidelity.png",
+         width = 2000, height = 1500, units="px")
+
+
+
+  # Reaction norms by individual ----
+  ggplot(indiv_tradeoffs, aes(x = dist_to_last_yr, y = mean_ln_dist, colour = Herd, group = id)) +
+    stat_smooth(geom = "line", alpha = 0.7, linewidth = 1, method = "lm", se = FALSE) +
+    geom_point(alpha = 0.3) +
+    geom_abline(slope = 0.014288, intercept = 0.364318, colour = "black", linewidth = 1, linetype = "dashed") +
+    ylab("Average change in ln(neighbour distance)") +
+    xlab("Distance to prior calving site (km)") +
+    coord_cartesian(xlim = c(0, 50), ylim = c(0, 1.6)) +
+    scale_colour_viridis(discrete = TRUE, option = "C", end = 0.9) +
+    annotate("text", x = 0.1, y = 1.5, label = "A", size = 10) +
+    theme_bw()
+
+    ggsave("graphics/indiv_socio-spatial_RNs.png",
+         width = 2000, height = 1200, units="px")
+
+
+  # What does the distribution of slopes look like?
+    slopes <- indiv_tradeoffs %>% dplyr::filter(!duplicated(id))
+  # 56 individuals with a slope estimate
+
+  # Density distribution of random slopes
+  ggplot(slopes, aes(x = slope)) +
+    ggdist::stat_halfeye(aes(fill = stat(x > 0), alpha = 0.4),
+                 trim = FALSE) +
+    scale_fill_manual(values = c("#FFA7BC", "#09097A")) +
+    xlab("Individual slope estimate") +
+    ylab("Relative density") +
+    geom_rug() +
+    geom_vline(xintercept = 0.0143, linetype = "dashed") + # population slope
+    xlim(-0.01, 0.035) +
+    annotate("text", x = -0.01, y = 0.95, label = "B", size = 10) +
+    theme_light() +
+    theme(legend.position = "none")
+  ggsave("graphics/indiv_tradeoff_slope_estimates_median.png",
+         width = 2000, height = 1200, units="px")
+
+
+  # Individual slopes for standardized spatial and social fidelity
+
+ggplot(slopes, aes(x = z.spat, y = mean_ln_dist, colour = Herd, group = id)) +
+  stat_smooth(geom = "line", alpha = 0.7, size = 0.5, method = "lm", se = FALSE) +
+  ylab("Average change in ln(neighbour distance)") +
+  xlab("Standarized distance to prior calving site") +
+  scale_colour_viridis(discrete = TRUE, end = 0.9) +
+  theme_light()
+
+ggsave("graphics/std-indiv-RNs.png",
+       width = 2000, height = 1500, units="px")
+
+# The trend is maintained (even strengthened) using standardized values
+
+}

@@ -1,0 +1,24 @@
+spatial_join <- function(dist_between_yr_by_id, dist_between_id_by_yr) {
+
+  self <- dist_between_yr_by_id %>%
+    filter(ID2 - ID1 == 1) %>%
+    dplyr::select(c(herd, id, season_yr = ID2, distance)) %>%
+    mutate(comparison = "self",
+           dyadID = paste0(id, "-", id))
+
+  others <- dist_between_id_by_yr %>%
+    dplyr::select(c(herd, id = ID1, season_yr, distance, dyadID)) %>%
+    mutate(comparison = "conspecific") %>%
+    filter(!duplicated(distance))
+
+  spatial <- rbind(self, others) %>%
+    mutate(season_yr = as.factor(season_yr),
+           herd = paste0(str_sub(herd, end = 1),
+                         tolower(str_sub(herd, start = 2))))
+
+  return(spatial)
+
+  # Now have to test if self distances are shorter than conspecific distances - but split by herd
+  ## Can I just use split() or map() in the _targets, and not include it here?
+
+}

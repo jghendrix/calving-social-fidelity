@@ -1,0 +1,3 @@
+report_model <- function(model) {
+  report::report(model)
+}

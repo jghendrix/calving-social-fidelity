@@ -1,0 +1,26 @@
+{
+    "id": "9617D301",
+    "path": "~/Academia/R Projects/Phil-Trans/_targets.R",
+    "project_path": "_targets.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1715272184034.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "87,4",
+        "scrollLine": "80"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1715276939,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1715276939191,
+    "read_only": false,
+    "read_only_alternatives": []
+}

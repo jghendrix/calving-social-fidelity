@@ -1,0 +1,16 @@
+tradeoff_model <- function(for_analyses) {
+
+  data <- for_analyses %>% filter(!is.na(mean_diff_dist)) %>%
+    mutate(dist_to_last_yr = dist_to_last_yr/1000,
+           mean_diff_dist = mean_diff_dist/1000)
+
+  m <- lme4::lmer(
+    formula = mean_diff_dist ~ dist_to_last_yr + (1|season_yr),
+    data = data
+  )
+
+  params <- parameters::parameters(m)
+  insight::standardize_names(params)
+
+}
+

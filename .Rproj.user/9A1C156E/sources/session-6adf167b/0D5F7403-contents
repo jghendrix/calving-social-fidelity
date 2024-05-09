@@ -1,0 +1,62 @@
+prep_parturition_dates <- function(nl_part, fogo_part, fogo_surv) {
+  prep_nl_part <- prep_nl_parturition(nl_part)
+  prep_fogo_part <- prep_fogo_parturition(fogo_part, fogo_surv)
+
+  prep_nl_part[prep_fogo_part, on = c('id', 'season_yr'), drop := TRUE]
+
+  DT <- rbindlist(list(prep_nl_part[is.na(drop)][, .SD, .SDcols = -c('drop')],
+                       prep_fogo_part), use.names = TRUE)
+  DT[, calving_date := as.Date(calving_date)]
+  return(DT)
+}
+
+
+# NL ----------------------------------------------------------------------
+prep_nl_parturition <- function(DT) {
+  DT[, V1 := NULL]
+  DT[, c('herd', 'id', 'yr') := tstrsplit(IDyear, '_')]
+  DT[, IDyear := NULL]
+
+  setnames(DT,
+           c('Calved', 'CalvingDate', 'Lost', 'LossDate'),
+           c('calved', 'calving_date', 'lost', 'loss_date'))
+
+  DT[, yr := year(calving_date)]
+  DT[, doy := yday(calving_date)]
+  set_seasons(DT)
+  DT[, c('yr', 'doy') := NULL]
+
+  # TODO: check why four rows have losses before calving dates
+  DT_sub <- DT[calving_date < loss_date]
+  DT_sub[, loss_date := NULL]
+
+  return(DT_sub)
+}
+
+
+
+# Fogo --------------------------------------------------------------------
+prep_fogo_parturition <- function(DT, survival) {
+  DT[, id := tstrsplit(IDyear, '_', keep = 1)]
+  survival[, c('id', 'yr') := tstrsplit(IDYr, '_', type.convert = TRUE)]
+
+  merged <- DT[survival, on = c('id',  'Year == yr')]
+
+  merged[, calved := TRUE]
+  merged[, lost := fifelse(Survival == 'no', TRUE, FALSE)]
+
+  merged[, herd := 'FOGO']
+
+  merged[, yr := year(calf_date)]
+  merged[, doy := yday(calf_date)]
+  set_seasons(merged)
+  merged[, c('yr', 'doy') := NULL]
+
+  merged[, c('Animal_ID', 'IDyear', 'IDYr', 'Year',
+             'Survival',
+             'EASTING', 'NORTHING') := NULL]
+
+  setnames(merged, 'calf_date', 'calving_date')
+
+  return(merged)
+}

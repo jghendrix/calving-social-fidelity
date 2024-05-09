@@ -1,0 +1,22 @@
+prep_locs <- function(DT, datetime, set_seasons = TRUE) {
+  check_truelength(DT)
+  check_col(DT, datetime, 'datetime')
+
+  DT[, datetime := as.POSIXct(.SD[[1]], tz = 'UTC'), .SDcols = datetime]
+
+  DT[, doy := data.table::yday(datetime)]
+  DT[, yr := data.table::year(datetime)]
+  DT[, mnth := data.table::month(datetime)]
+
+  # To avoid vctrs error
+  DT[, date := as.Date(idate)]
+  DT[, idate := NULL]
+
+  if (set_seasons) {
+    set_seasons(DT)
+  }
+
+  DT[is.na(herd) & grepl('Fogo', name), herd := 'FOGO']
+
+  return(DT)
+}

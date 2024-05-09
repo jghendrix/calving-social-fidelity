@@ -1,0 +1,10 @@
+merge_parturition_dates <- function(DT, parturition_dates) {
+  DT[parturition_dates,
+     c('calving_date', 'lost') := .(calving_date, lost),
+     on = c('id', 'date == calving_date', 'season_yr', 'season')]
+
+  DT[, calving_doy := yday(calving_date)]
+  DT[, calving_date := date == calving_date]
+
+  return(DT)
+}

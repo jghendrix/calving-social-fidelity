@@ -1,0 +1,22 @@
+manual_displ <- function(DT) {
+
+  DT %<>% mutate(idyr = paste0(id, "_", season_yr))
+
+
+  init <- DT %>% group_by(idyr) %>%
+    dplyr::filter(doy == min(doy)) %>%
+    dplyr::select(c(idyr, x_init = mean_daily_x, y_init = mean_daily_y))
+
+  DT %<>% rename(x = mean_daily_x, y = mean_daily_y)
+
+  DT <- left_join(DT, init, by = "idyr")
+
+  DT %<>% mutate(displ = sqrt((x-x_init)^2+(y-y_init)^2)) %>%
+    group_by(idyr, herd) %>%
+  #  dplyr::filter(doy <= calf_date + 7) %>%
+    # just to see what it looks like if we use a week, instead of 4 weeks
+    summarise(avg = mean(displ),
+              max = max(displ))
+}
+
+

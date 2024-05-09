@@ -1,0 +1,22 @@
+spatial_model <- function(self_others) {
+
+  data <- self_others %>%
+    mutate(dyadYr = paste0(dyadID,"_", season_yr)) %>%
+    filter(!duplicated(dyadYr)) %>%
+    mutate(year = as.numeric(season_yr)) %>%
+    group_by(Herd) %>%
+    mutate(min = min(year)) %>%
+    ungroup() %>%
+    filter(year != min)
+# This is so messy, but basically wanted to (a) remove the duplicate records courtesy of mapping over when we generated this df, and then (b) remove the first year of each herd where we only have conspecific measurements and no fidelity yet
+
+
+   m <- lmer(
+    formula = distance ~ comparison + (1|id) + (1|season_yr),
+    data = data)
+
+    params <- parameters::parameters(m)
+    insight::standardize_names(params)
+
+
+    }
